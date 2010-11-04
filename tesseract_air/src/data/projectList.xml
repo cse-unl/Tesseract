@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <project>
+    <project_id>633</project_id>
+    <project_name>gnome/metacity</project_name>
+    <startWhen>11472</startWhen>
+    <endWhen>13483</endWhen>
+  </project>
+  <project>
+    <project_id>638</project_id>
+    <project_name>gnome/mlview</project_name>
+    <startWhen>11549</startWhen>
+    <endWhen>13066</endWhen>
+  </project>
+  <project>
+    <project_id>650</project_id>
+    <project_name>gnome/muine</project_name>
+    <startWhen>12434</startWhen>
+    <endWhen>13523</endWhen>
+  </project>
+  <project>
+    <project_id>736</project_id>
+    <project_name>gnome/rhythmbox</project_name>
+    <startWhen>11749</startWhen>
+    <endWhen>13549</endWhen>
+  </project>
+  <project>
+    <project_id>744</project_id>
+    <project_name>gnome/sawfish</project_name>
+    <startWhen>10795</startWhen>
+    <endWhen>13548</endWhen>
+  </project>
+  <project>
+    <project_id>761</project_id>
+    <project_name>gnome/soup</project_name>
+    <startWhen>11297</startWhen>
+    <endWhen>13104</endWhen>
+  </project>
+  <!-- <project>
+    <project_id>135</project_id>
+    <project_name>gnome/epittance</project_name>
+  </project>
+    <project>
+    <project_id>442</project_id>
+    <project_name>gnome/gtk-addons</project_name>
+  </project>
+    <project>
+    <project_id>654</project_id>
+    <project_name>gnome/nautilus-cd-burner</project_name>
+  </project> -->
+</root>

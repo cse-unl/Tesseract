@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <bugCommit>
+    <bug_id>34959</bug_id>
+    <cvs_commit_id>401169</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>35022</bug_id>
+    <cvs_commit_id>401170</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>34970</bug_id>
+    <cvs_commit_id>401171</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>34980</bug_id>
+    <cvs_commit_id>401205</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>34973</bug_id>
+    <cvs_commit_id>401210</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>117295</bug_id>
+    <cvs_commit_id>401223</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>34996</bug_id>
+    <cvs_commit_id>401167</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>34963</bug_id>
+    <cvs_commit_id>401129</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>34956</bug_id>
+    <cvs_commit_id>401129</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>55187</bug_id>
+    <cvs_commit_id>401129</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>55187</bug_id>
+    <cvs_commit_id>401129</cvs_commit_id>
+  </bugCommit>
+</root>

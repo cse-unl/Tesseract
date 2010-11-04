@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <bugCommit>
+    <bug_id>32790</bug_id>
+    <cvs_commit_id>408298</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>32739</bug_id>
+    <cvs_commit_id>408256</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>2422</bug_id>
+    <cvs_commit_id>408067</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>32773</bug_id>
+    <cvs_commit_id>408054</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>126396</bug_id>
+    <cvs_commit_id>407958</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>32635</bug_id>
+    <cvs_commit_id>407857</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>32787</bug_id>
+    <cvs_commit_id>408148</cvs_commit_id>
+  </bugCommit>
+  <bugCommit>
+    <bug_id>32696</bug_id>
+    <cvs_commit_id>408174</cvs_commit_id>
+  </bugCommit>
+</root>

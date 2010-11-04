@@ -1,0 +1,1720 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
+						xmlns:mpv="com.maccherone.mpv.*"
+						xmlns:fc="com.adobe.flex.extras.controls.springgraph.*"
+						xmlns:flexlib="http://code.google.com/p/flexlib/"
+						layout="vertical"
+						horizontalAlign="left"
+						applicationComplete="onApplicationComplete()"
+						paddingTop="5"
+						paddingLeft="5"
+						paddingRight="5"
+						paddingBottom="5"
+						name="Tesseract"
+						title="Tesseract"
+						height="680"
+						width="1200">
+
+	<mpv:DataManipulator id="dm"/>
+	<mx:Binding source="dateRangeSlider.values"
+				destination="dm.whenRange"/>
+	<mx:Binding destination="dateRangeSlider.values"
+				source="dm.whenRange"/>
+	<mx:Binding destination="dateRangeSlider.getThumbAt(0).toolTip"
+				source="dm.toolTipFormatter(dm.whenRange[0])"/>
+	<mx:Binding destination="dateRangeSlider.getThumbAt(1).toolTip"
+				source="dm.toolTipFormatter(dm.whenRange[1])"/>
+	<mx:Binding source="dm.fToFGraph"
+				destination="fToF.dataProvider"/>
+	<mx:Binding source="fileNumberThreshold.value"
+				destination="dm.fileNumberThreshold"/>
+	<mx:Binding source="committedTogetherThreshold.value"
+				destination="dm.committedTogetherThreshold"/>
+	<mx:Binding source="dm.committedTogetherMin"
+				destination="committedTogetherThreshold.minimum"/>
+
+	<mx:Binding source="dm.committedTogetherMax"
+				destination="committedTogetherThreshold.maximum"/>
+	<mx:Binding source="fileFilter.selectedItems"
+				destination="dm.selectedExtensions"/>
+	<mx:Binding source="daysBeforeStart.value"
+				destination="dm.commLookBackDays"/>
+	<mx:Binding source="email.selected"
+				destination="dm.commShowEmailFlag"/>
+	<mx:Binding source="comment.selected"
+				destination="dm.commShowCommentFlag"/>
+	<mx:Binding source="activity.selected"
+				destination="dm.commShowActivityFlag"/>
+	<mx:Binding source="enhancement.selected"
+				destination="dm.bugShowEnhancementFlag"/>
+	<mx:Binding source="trivial.selected"
+				destination="dm.bugShowTrivialFlag"/>
+	<mx:Binding source="minor.selected"
+				destination="dm.bugShowMinorFlag"/>
+	<mx:Binding source="normal.selected"
+				destination="dm.bugShowNormalFlag"/>
+	<mx:Binding source="major.selected"
+				destination="dm.bugShowMajorFlag"/>
+	<mx:Binding source="critical.selected"
+				destination="dm.bugShowCriticalFlag"/>
+	<mx:Binding source="blockerBox.selected"
+				destination="dm.bugShowBlockerFlag"/>
+	<!-- TODO: The hiddenAxisStyle is a total hack -->
+	<mx:Style>
+		.axisStyle {
+			placement:bottom;
+			minorTickPlacement:none;
+			tickLength:3;
+			tickPlacement:outside;
+			fontSize:8;
+			labelGap:3;
+		}
+		.hiddenAxisStyle {
+			placement:bottom;
+			minorTickPlacement:none;
+			tickLength:0;
+			tickPlacement:outside;
+			fontSize:8;
+			color: #ffffff;
+			labelGap:3;
+		}		
+		ColumnChart {
+			paddingBottom:0;
+		}
+	</mx:Style>
+	<mx:SolidColor id="enhancementColor"
+				   color="{dm.enhancementColor}"/>
+	<mx:SolidColor id="trivialColor"
+				   color="{dm.trivialColor}"/>
+	<mx:SolidColor id="minorColor"
+				   color="{dm.minorColor}"/>
+	<mx:SolidColor id="normalColor"
+				   color="{dm.normalColor}"/>
+	<mx:SolidColor id="majorColor"
+				   color="{dm.majorColor}"/>
+	<mx:SolidColor id="criticalColor"
+				   color="{dm.criticalColor}"/>
+	<mx:SolidColor id="blockerColor"
+				   color="{dm.blockerColor}"/>
+	<mx:SolidColor id="commitColor"
+				   color="{dm.projectCommitColor}"/>
+	<mx:SolidColor id="communicationColor"
+				   color="{dm.projectCommunicationColor}"/>
+
+	<mx:VDividedBox liveDragging="true"
+					width="100%"
+					height="100%">
+		<mx:Panel title="Project"
+				  width="100%"
+				  layout="horizontal"
+				  headerHeight="20">
+			<mx:VBox width="250">
+				<mx:ComboBox id="projectComboBox"
+							 width="100%"
+							 change="onProjectIDChange()"
+							 labelField="project_name"
+							 dataProvider="{dm.projects}"/>
+				<!--<mx:HBox id="searchBox"
+					 width="100%"
+					 visible="false">
+					 <mx:Label text="Search"/>
+					 <mx:TextInput id="searchInput"
+					 width="100%"
+					 enter="dm.searchHighlight(event)"/>
+					 </mx:HBox>-->
+			</mx:VBox>
+			<mx:VBox id="displayControlsBox"
+					 visible="false">
+				<mx:VBox>
+					<mx:TextArea text="DoubleClick node to drill down upon all selected."
+								 borderThickness="0"
+								 height="30"
+								 editable="false"/>
+					<mx:Button id="clearDrillDownButton"
+							   label="Clear drilldown"
+							   click="{clearDrillDown()}"
+							   visible="false"/>
+					<!--<mx:Button id="showReleaseButton"
+						 label="Show releases"
+						 right="10"
+						 bottom="4"
+						 click="{getReleaseDatesInRange(event)}"
+						 visible="true"
+						 toolTip="Click to show releases on date slider"/>-->
+				</mx:VBox>
+			</mx:VBox>
+			<mx:Canvas width="100%">
+				<mx:ProgressBar id="projectLoadingProgressBar"
+								width="100%"
+								visible="false"
+								mode="manual"
+								indeterminate="true"/>
+				<!--<mx:ProgressBar id="projectRecalculatingProgressBar"
+					 width="100%"
+					 visible="false"
+					 label="RECALCULATING"
+					 mode="manual"
+					 indeterminate="true"/>-->
+				<mx:HBox id="projectActivityBox"
+						 visible="false"
+						 width="100%">
+					<mx:Canvas id="projectActivityCanvas"
+							   width="100%"
+							   height="100">
+						<mx:ColumnChart id="projectActivity"
+										height="100%"
+										width="100%"
+										horizontalAxisStyleName="axisStyle"
+										verticalAxisStyleName="hiddenAxisStyle"
+										dataProvider="{dm.projectActivity}"
+										columnWidthRatio="1">
+							<mx:seriesFilters>
+								<mx:Array/>
+							</mx:seriesFilters>
+
+							<mx:series>
+								<mx:ColumnSeries id="projectCommitsSeries"
+												 yField="commits"
+												 xField="when"
+												 fill="{commitColor}"/>
+
+								<mx:ColumnSeries id="projectCommunicationSeries"
+												 yField="communication"
+												 xField="when"
+												 fill="{communicationColor}">
+									<!-- <mx:verticalAxis>
+										 <mx:LinearAxis />
+										 </mx:verticalAxis>-->
+								</mx:ColumnSeries>
+
+							</mx:series>
+						</mx:ColumnChart>
+						<mx:Box paddingLeft="23"
+								paddingRight="21"
+								paddingBottom="1"
+								width="100%"
+								y="68">
+							<flexlib:HSlider id="dateRangeSlider"
+											 trackHighlightSkin="flexlib.skins.SliderHighlightSkin"
+											 allowTrackClick="true"
+											 allowThumbOverlap="true"
+											 liveDragging="true"
+											 showDataTip="true"
+											 dataTipPlacement="bottom"
+											 dataTipOffset="3"
+											 showTrackHighlight="true"
+											 thumbCount="2"
+											 width="100%"
+											 top="-90"
+											 values="{dm.whenRange}"
+											 minimum="{dm.whenMin}"
+											 maximum="{dm.whenMax}"
+											 snapInterval="1"
+											 tickColor="{dm.criticalColor}"
+											 tickThickness="2"
+											 tickLength="7"
+											 tickOffset="-3"
+											 dataTipFormatFunction="{dm.toolTipFormatterWithRelease}"
+											 change="{dateSliderChangeHandler()}"
+											 thumbRelease="{onDateRangeChanged()}"/>
+						</mx:Box>
+						<mx:Label text="Commits"
+								  color="{dm.projectCommitColor}"
+								  right="25"/>
+						<mx:Label text="Communication"
+								  color="{dm.projectCommunicationColor}"
+								  right="25"
+								  bottom="20"/>
+					</mx:Canvas>
+				</mx:HBox>
+			</mx:Canvas>
+		</mx:Panel>
+
+		<!--<mx:VDividedBox liveDragging="true"
+			 width="100%"
+			 height="100%">-->
+		<mx:HDividedBox height="50%"
+						liveDragging="true"
+						width="100%">
+			<mx:Canvas width="40%"
+					   height="100%"
+					   horizontalScrollPolicy="off">
+				<mx:Panel id="fToFPanel"
+						  width="100%"
+						  height="100%"
+						  title="Files"
+						  horizontalScrollPolicy="off">
+					<mx:VBox id="fileBox"
+							 width="100%"
+							 height="0"
+							 visible="false"
+							 paddingTop="5">
+						<mx:HBox width="100%">
+							<mx:Label text="Commit threshold"
+									  toolTip="{fileNumberThreshold.toolTip}"/>
+							<mx:NumericStepper id="fileNumberThreshold"
+											   value="20"
+											   maximum="50"
+											   width="40"
+											   toolTip="Ignore commits with above this number of files"
+											   change="isFToFChanged()"/>
+							<mx:Label text="Edge threshold"
+									  toolTip="{committedTogetherThreshold.toolTip}"/>
+							<mx:NumericStepper id="committedTogetherThreshold"
+											   value="5"
+											   change="isFToFChanged()"
+											   minimum="{dm.committedTogetherMin}"
+											   maximum="{dm.committedTogetherMax}"
+											   width="40"
+											   toolTip="Ignore relationship if committed together less often than this"/>
+							<mx:Label text="Repulsion"
+									  toolTip="{fToFRepulsionSlider.toolTip}"/>
+							<mx:HSlider id="fToFRepulsionSlider"
+										value="1.4"
+										minimum="0.02"
+										maximum="3.0"
+										change="fToF.refresh()"
+										liveDragging="true"
+										toolTip="Set the repulsion factor of the SpringGraph"
+										width="70"/>
+							<mx:Label text="File filter"
+									  id="filterLabel"
+									  toolTip="{fileFilter.toolTip}"/>
+							<mpv:MultiSelectComboBox id="fileFilter"
+													 dataProvider="{fileExtensions}"
+													 width="90"
+													 toolTip="Choose a file extension to filter files"
+													 rowCount="{fileExtensions.length}"
+													 change="isFToFChanged()"/>
+						</mx:HBox>
+						<mx:HRule width="100%"
+								  height="2"/>
+					</mx:VBox>
+					<mx:HDividedBox id="fileDividedBox"
+									liveDragging="true"
+									width="100%"
+									height="100%"
+									visible="false">
+						<mx:VBox height="100%">
+							<mx:HBox id="fileSearchBox"
+									 width="225"
+									 height="0"
+									 visible="false">
+								<mx:Label text="Search"/>
+								<mx:TextInput id="fileSearchInput"
+											  width="100%"
+											  enter="dm.searchHighlight(event)"/>
+							</mx:HBox>
+							<mx:DataGrid id="fileList"
+										 height="100%"
+										 alternatingItemColors="[#EAF7FB, #FFFFFF]"
+										 change="dm.fileListClick()"
+										 allowMultipleSelection="true">
+								<mx:columns>
+									<mx:DataGridColumn headerText="File name"
+													   dataField="file_name"
+													   width="225"/>
+								</mx:columns>
+							</mx:DataGrid>
+						</mx:VBox>
+						<fc:SpringGraph id="fToF"
+										width="100%"
+										height="100%"
+										repulsionFactor="{fToFRepulsionSlider.value}"
+										motionThreshold="0.001"
+										autoFit="false"
+										dataProvider="{dm.fToFGraph}"
+										edgeRenderer="{dm.fToFEdgeRenderer}"
+										viewFactory="{dm.fToFViewFactory}"
+										click="{dm.backgroundClickClear(event)}">
+
+							<fc:removeItemEffect>
+								<mx:Fade alphaFrom="1"
+										 alphaTo="0"
+										 duration="1000"/>
+							</fc:removeItemEffect>
+
+							<fc:addItemEffect>
+								<mx:Fade alphaFrom="0"
+										 alphaTo="1"
+										 duration="1000"/>
+							</fc:addItemEffect>
+
+						</fc:SpringGraph>
+					</mx:HDividedBox>
+				</mx:Panel>
+				<mx:Button id="fToFSettingsButton"
+						   label="Show Settings"
+						   right="10"
+						   top="4"
+						   click="{fToFSettingsToggle()}"
+						   visible="false"/>
+				<mx:Button id="fileSearchButton"
+						   label="Search"
+						   right="135"
+						   top="4"
+						   click="{fileSearchButtonClicked()}"
+						   visible="false"/>
+			</mx:Canvas>
+
+			<mx:Canvas width="40%"
+					   height="100%"
+					   horizontalScrollPolicy="off">
+				<mx:Panel width="100%"
+						  height="100%"
+						  title="Developers">
+					<mx:VBox id="developerBox"
+							 visible="false"
+							 height="0"
+							 width="100%"
+							 paddingTop="5"
+							 horizontalScrollPolicy="auto">
+						<!--set the days before start option invisible-->
+						<mx:HBox width="100%"
+								 id="commShowSettings"
+								 includeInLayout="false"
+								 visible="false">
+							<mx:Label text="Days before start"
+									  includeInLayout="false"
+									  visible="false"/>
+							<mx:NumericStepper id="daysBeforeStart"
+											   includeInLayout="false"
+											   visible="false"
+											   value="0"
+											   maximum="365"/>
+						</mx:HBox>
+						<mx:HBox width="100%"
+								 id="commShowFlags">
+							<mx:Label text="Source"/>
+							<mx:CheckBox id="email"
+										 selected="true"
+										 label="Email"/>
+							<mx:CheckBox id="comment"
+										 selected="true"
+										 label="Comment"/>
+							<mx:CheckBox id="activity"
+										 selected="true"
+										 label="Activity"/>
+							<mx:Label text="Repulsion"
+									  toolTip="{dToDRepulsionSlider.toolTip}"/>
+							<mx:HSlider id="dToDRepulsionSlider"
+										value="2.0"
+										minimum="0.1"
+										maximum="5.0"
+										change="dToD.refresh()"
+										liveDragging="true"
+										toolTip="Set the repulsion factor of the SpringGraph"
+										width="100"/>
+						</mx:HBox>
+						<mx:HBox width="100%">
+							<mx:Label text="Edges"/>
+							<mx:RadioButtonGroup id="dToDMode"
+												 itemClick="dToDModeChanged(event)"
+												 selectedValue="congruence"/>
+							<mx:RadioButton groupName="dToDMode"
+											id="coordinationRequirementRB"
+											value="coordinationRequirement"
+											label="Requirement"/>
+							<mx:RadioButton groupName="dToDMode"
+											id="congruenceRB"
+											value="congruence"
+											label="Congruence"/>
+							<mx:RadioButton groupName="dToDMode"
+											id="communicationRB"
+											value="communication"
+											label="Communication"/>
+						</mx:HBox>
+						<mx:HRule width="100%"/>
+					</mx:VBox>
+
+					<mx:HDividedBox id="developerDividedBox"
+									width="100%"
+									height="100%"
+									visible="false">
+						<mx:VBox height="100%">
+							<mx:HBox id="developerSearchBox"
+									 width="150"
+									 height="0"
+									 visible="false">
+								<mx:Label text="Search"/>
+								<mx:TextInput id="developerSearchInput"
+											  width="100%"
+											  enter="dm.searchHighlight(event)"/>
+							</mx:HBox>
+							<mx:DataGrid id="developerList"
+										 height="100%"
+										 alternatingItemColors="[#EAF7FB, #FFFFFF]"
+										 change="dm.developerListClick()"
+										 allowMultipleSelection="true">
+								<mx:columns>
+									<mx:DataGridColumn headerText="Name"
+													   dataField="name"
+													   width="150"/>
+								</mx:columns>
+							</mx:DataGrid>
+						</mx:VBox>
+
+						<fc:SpringGraph id="dToD"
+										width="100%"
+										height="100%"
+										repulsionFactor="{dToDRepulsionSlider.value}"
+										motionThreshold="0.001"
+										autoFit="false"
+										dataProvider="{dm.dToDGraph}"
+										edgeRenderer="{dm.dToDEdgeRenderer}"
+										viewFactory="{dm.dToDViewFactory}"
+										click="{dm.backgroundClickClear(event)}">
+
+							<fc:removeItemEffect>
+								<mx:Fade alphaFrom="1"
+										 alphaTo="0"
+										 duration="1000"/>
+							</fc:removeItemEffect>
+
+							<fc:addItemEffect>
+								<mx:Fade alphaFrom="0"
+										 alphaTo="1"
+										 duration="1000"/>
+							</fc:addItemEffect>
+
+						</fc:SpringGraph>
+					</mx:HDividedBox>
+
+				</mx:Panel>
+				<mx:Button id="developerSearchButton"
+						   label="Search"
+						   right="135"
+						   top="4"
+						   click="{developerSearchButtonClicked()}"
+						   visible="false"/>
+				<mx:Button id="dToDSettingsButton"
+						   label="Show Settings"
+						   right="10"
+						   top="4"
+						   click="{dToDSettingsToggle()}"
+						   visible="false"/>
+			</mx:Canvas>
+
+		</mx:HDividedBox>
+		<mx:Panel title="Issues"
+				  height="30%"
+				  width="100%"
+				  headerHeight="20">
+			<mx:TabNavigator id="bugTabs"
+							 visible="false"
+							 height="100%"
+							 width="100%"
+							 creationPolicy="all"
+							 borderStyle="none">
+				<mx:VBox id="bugBox"
+						 label="Overview"
+						 height="100%"
+						 width="100%">
+					<mx:HBox width="100%"
+							 id="bugFilters">
+						<mx:Label text="Severity:"/>
+						<mx:CheckBox id="enhancement"
+									 selected="true"
+									 label="Enhancement"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.enhancementColor, dm.enhancementColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:CheckBox id="trivial"
+									 selected="true"
+									 label="Trivial"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.trivialColor, dm.trivialColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:CheckBox id="minor"
+									 selected="true"
+									 label="Minor"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.minorColor, dm.minorColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:CheckBox id="normal"
+									 selected="true"
+									 label="Normal"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.normalColor, dm.normalColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:CheckBox id="major"
+									 selected="true"
+									 label="Major"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.majorColor, dm.majorColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:CheckBox id="critical"
+									 selected="true"
+									 label="Critical"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.criticalColor, dm.criticalColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:CheckBox id="blockerBox"
+									 selected="true"
+									 label="Blocker"
+									 fillAlphas="[1.0, 1.0]"
+									 fillColors="{[dm.blockerColor, dm.blockerColor]}"
+									 valueCommit="{onBugFilterChange()}"/>
+						<mx:Canvas width="100%">
+							<mx:Button id="overviewBugToReleaseBtn"
+									   label="Jump to release"
+									   right="100"
+									   visible="false"
+									   click="{displayOverviewBugInRelease()}"/>
+						</mx:Canvas>
+					</mx:HBox>
+
+					<mx:Canvas width="100%">
+						<mx:AreaChart id="openBugs"
+									  width="100%"
+									  height="60"
+									  x="0"
+									  y="0"
+									  dataProvider="{dm.openBugs}"
+									  type="stacked">
+							<mx:series>
+								<!--<mx:AreaSeries yField="enhancement"
+									 xField="date"
+									 areaFill="{enhancementColor}"/>
+									 <mx:AreaSeries yField="trivial"
+									 xField="date"
+									 areaFill="{trivialColor}"/>
+									 <mx:AreaSeries yField="minor"
+									 xField="date"
+									 areaFill="{minorColor}"/>
+									 <mx:AreaSeries yField="normal"
+									 xField="date"
+									 areaFill="{normalColor}"/>
+									 <mx:AreaSeries yField="major"
+									 xField="date"
+									 areaFill="{majorColor}"/>
+									 <mx:AreaSeries yField="critical"
+									 xField="date"
+									 areaFill="{criticalColor}"/>
+									 <mx:AreaSeries yField="blocker"
+									 xField="date"
+									 areaFill="{blockerColor}"/>-->
+								<mx:AreaSeries yField="blocker"
+											   xField="date"
+											   areaFill="{blockerColor}"/>
+								<mx:AreaSeries yField="critical"
+											   xField="date"
+											   areaFill="{criticalColor}"/>
+								<mx:AreaSeries yField="major"
+											   xField="date"
+											   areaFill="{majorColor}"/>
+								<mx:AreaSeries yField="normal"
+											   xField="date"
+											   areaFill="{normalColor}"/>
+								<mx:AreaSeries yField="minor"
+											   xField="date"
+											   areaFill="{minorColor}"/>
+								<mx:AreaSeries yField="trivial"
+											   xField="date"
+											   areaFill="{trivialColor}"/>
+								<mx:AreaSeries yField="enhancement"
+											   xField="date"
+											   areaFill="{enhancementColor}"/>
+							</mx:series>
+						</mx:AreaChart>
+					</mx:Canvas>
+					<!-- <mx:Legend height="30" dataProvider="{openBugs}"/> -->
+
+					<mx:DataGrid id="bugList"
+								 width="100%"
+								 height="100%"
+								 dataProvider="{dm.bugs}"
+								 toolTip="Double click to see similar bugs"
+								 alternatingItemColors="[#EAF7FB, #FFFFFF]"
+								 doubleClickEnabled="true"
+								 doubleClick="mltSearch(event)"
+								 change="onBugListSelected(event)"
+								 allowMultipleSelection="true"
+								 selectionColor="{dm.selectNodeColor}">
+						<mx:columns>
+							<mx:DataGridColumn headerText="Bug ID"
+											   dataField="bug_id"
+											   width="60"/>
+							<!-- The assigned_to field in the xml files is not from the same pool as the other person_ids so it's not displayed for now.
+								 <mx:DataGridColumn headerText="Assigned to" dataField="assigned_to" width="90" />
+							-->
+							<mx:DataGridColumn headerText="Start"
+											   dataField="start_when"
+											   width="90"
+											   labelFunction="dm.startDateFormatter"/>
+							<mx:DataGridColumn headerText="End"
+											   dataField="end_when"
+											   width="90"
+											   labelFunction="dm.endDateFormatter"/>
+							<mx:DataGridColumn headerText="Severity"
+											   dataField="bug_severity"
+											   width="90"/>
+							<mx:DataGridColumn headerText="Assigned to"
+											   dataField="assigned_to"
+											   width="90"/>
+							<mx:DataGridColumn headerText="Status"
+											   dataField="bug_status"
+											   width="90"/>
+							<mx:DataGridColumn headerText="Resolution"
+											   dataField="bug_resolution"
+											   width="90"/>
+							<mx:DataGridColumn headerText="Description"
+											   dataField="bug_desc"
+											   itemRenderer="selectableText"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</mx:VBox>
+				<mx:VBox label="Find Bugs">
+					<mx:Form width="100%">
+						<mx:HBox>
+							<mx:TextInput id="query"
+										  enter="searchBug()"/>
+							<mx:Button label="Find Bugs"
+									   click="searchBug()"/>
+							<mx:Button id="advancedBtn"
+									   label="Advanced"
+									   click="showAdvancedSearch()"/>
+							<mx:Label id="searchDateLabel"
+									  visible="false"
+									  text="Date"/>
+							<flexlib:HSlider id="searchDateSlider"
+											 visible="false"
+											 width="200"
+											 trackHighlightSkin="flexlib.skins.SliderHighlightSkin"
+											 allowTrackClick="true"
+											 liveDragging="true"
+											 showDataTip="true"
+											 showTrackHighlight="true"
+											 thumbCount="2"
+											 change="{onSearchDateSliderChange()}"
+											 values="{dm.whenRange}"
+											 minimum="{dm.whenMin}"
+											 maximum="{dm.whenMax}"
+											 snapInterval="1"
+											 dataTipFormatFunction="{dm.toolTipFormatterWithRelease}"/>
+							<mx:Label id="searchFilterLabel"
+									  visible="false"
+									  text="Filters:"/>
+							<mx:CheckBox id="duplicate"
+										 visible="false"
+										 selected="true"
+										 label="Duplicate"
+										 fillAlphas="[1.0, 1.0]"/>
+							<mx:CheckBox id="wontFix"
+										 visible="false"
+										 selected="true"
+										 label="Won't fix"
+										 fillAlphas="[1.0, 1.0]"/>
+							<mx:CheckBox id="notABug"
+										 visible="false"
+										 selected="true"
+										 label="Not a bug"
+										 fillAlphas="[1.0, 1.0]"/>
+							<mx:Label id="rowsCountLabel"
+									  visible="false"
+									  text="Rows count:"
+									  toolTip="{rowsCountStepper.toolTip}"/>
+							<mx:NumericStepper id="rowsCountStepper"
+											   visible="false"
+											   value="10"
+											   minimum="1"
+											   maximum="1000"
+											   width="70"
+											   toolTip="Set the number of rows of results to display"/>
+							<mx:Button id="searchedBugToReleaseBtn"
+									   label="Jump to release"
+									   visible="false"
+									   click="{displayBugInRelease(resultedBugs[dgBug.selectedIndex])}"/>
+						</mx:HBox>
+					</mx:Form>
+					<mx:VBox id="resultBox"
+							 visible="false"
+							 width="100%"
+							 height="100%">
+						<!--<mx:Label text="Result bugs:"/>-->
+						<mx:DataGrid id="dgBug"
+									 dataProvider="{resultedBugs}"
+									 doubleClickEnabled="true"
+									 doubleClick="{mltSearch(event)}"
+									 change="{onSearchedBugListSelected(event)}"
+									 toolTip="Double click to see similar bugs"
+									 width="100%"
+									 height="100%"
+									 selectionColor="{dm.selectNodeColor}"
+									 alternatingItemColors="[#EAF7FB, #FFFFFF]">
+							<mx:columns>
+								<mx:DataGridColumn id="searchColumnID"
+												   headerText="Bug ID"
+												   dataField="bug_id"
+												   width="60"/>
+								<mx:DataGridColumn id="searchColumnStartWhen"
+												   headerText="Start"
+												   dataField="start_when"
+												   width="90"
+												   labelFunction="dm.startDateFormatter"/>
+								<mx:DataGridColumn id="searchColumnEndWhen"
+												   headerText="End"
+												   dataField="end_when"
+												   width="90"
+												   labelFunction="dm.endDateFormatter"/>
+								<mx:DataGridColumn id="searchColumnSeverity"
+												   headerText="Severity"
+												   dataField="bug_severity"
+												   width="90"/>
+								<mx:DataGridColumn id="searchColumnPriority"
+												   headerText="Priority"
+												   dataField="bug_priority"
+												   width="60"/>
+								<mx:DataGridColumn id="searchColumnStatus"
+												   headerText="Status"
+												   dataField="bug_status"
+												   width="90"/>
+								<mx:DataGridColumn id="searchColumnResolution"
+												   headerText="Resolution"
+												   dataField="bug_resolution"
+												   width="90"/>
+								<mx:DataGridColumn id="searchColumnDesc"
+												   headerText="Description"
+												   dataField="bug_desc">
+									<mx:itemRenderer>
+										<mx:Component>
+											<mx:Text selectable="true"
+													 htmlText="{data.bug_desc}"/>
+										</mx:Component>
+									</mx:itemRenderer>
+								</mx:DataGridColumn>
+							</mx:columns>
+						</mx:DataGrid>
+					</mx:VBox>
+				</mx:VBox>
+
+				<mx:VBox id="similarBugsBox"
+						 label="Similar Bugs"
+						 verticalScrollPolicy="off">
+					<mx:HBox width="100%">
+						<mx:Canvas width="100%">
+							<mx:Label id="moreBugsLabel"
+									  visible="false"/>
+							<!--<mx:ProgressBar id="releaseCalculatingProgressBar"
+								 width="30%"
+								 right="250"
+								 visible="false"
+								 label="Calculating releases of this bug"
+								 mode="manual"
+								 indeterminate="true"
+								 labelPlacement="left"/>-->
+							<mx:Button id="similarBugToReleaseBtn"
+									   label="Jump to release"
+									   right="100"
+									   visible="false"
+									   click="{displayBugInRelease(mltBugs[moreBugsLikeThis.selectedIndex])}"/>
+						</mx:Canvas>
+					</mx:HBox>
+					<mx:DataGrid id="moreBugsLikeThis"
+								 dataProvider="{mltBugs}"
+								 rowCount="5"
+								 visible="false"
+								 width="100%"
+								 change="{onSimilarBugListSelected(event)}"
+								 doubleClickEnabled="true"
+								 doubleClick="mltSearch(event)"
+								 toolTip="Double click to see similar bugs"
+								 selectionColor="{dm.selectNodeColor}"
+								 alternatingItemColors="[#EAF7FB, #FFFFFF]">
+						<mx:columns>
+							<mx:DataGridColumn id="mltColumnID"
+											   headerText="Bug ID"
+											   dataField="bug_id"/>
+							<mx:DataGridColumn id="mltColumnStartWhen"
+											   headerText="Start"
+											   dataField="start_when"
+											   labelFunction="dm.startDateFormatter"/>
+							<mx:DataGridColumn id="mltColumnEndWhen"
+											   headerText="End"
+											   dataField="end_when"
+											   labelFunction="dm.endDateFormatter"/>
+							<mx:DataGridColumn id="mltColumnSeverity"
+											   headerText="Severity"
+											   dataField="bug_severity"/>
+							<mx:DataGridColumn id="mltColumnPriority"
+											   headerText="Priority"
+											   dataField="bug_priority"/>
+							<mx:DataGridColumn id="mltColumnStatus"
+											   headerText="Status"
+											   dataField="bug_status"/>
+							<mx:DataGridColumn id="mltColumnResolution"
+											   headerText="Resolution"
+											   dataField="bug_resolution"/>
+							<mx:DataGridColumn id="mltColumnDesc"
+											   headerText="Description"
+											   dataField="bug_desc"
+											   itemRenderer="selectableText"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</mx:VBox>
+				<mx:VBox label="Bug details">
+
+				</mx:VBox>
+			</mx:TabNavigator>
+		</mx:Panel>
+	</mx:VDividedBox>
+	<mx:HTTPService id="solr"
+					url="http://cse.unl.edu:9090/solr/select/"
+					useProxy="false"
+					method="POST"
+					resultFormat="xml"
+					fault="httpFault(event)"
+					result="httpResult(event)">
+	</mx:HTTPService>
+	<mx:HTTPService id="mltSolr"
+					url="http://cse.unl.edu:9090/solr/mlt"
+					useProxy="false"
+					method="POST"
+					resultFormat="xml"
+					fault="httpFault(event)"
+					result="mltResult(event)">
+	</mx:HTTPService>
+	<mx:Script>
+		<![CDATA[
+			import com.adobe.flex.extras.controls.springgraph.Item;
+			import com.maccherone.mpv.DataManipulator;
+			import com.maccherone.mpv.MPVNode;
+			import com.maccherone.mpv.MapMatrix;
+			import com.maccherone.mpv.MultiURLLoader;
+			import mx.events.SliderEvent;
+			import mx.controls.sliderClasses.Slider;
+//        	import com.maccherone.mpv.DataManipulator;
+//        	
+//        	[Bindable]
+//        	private var dm:DataManipulator = new DataManipulator();
+//        	
+//        	private function init():void {
+//        		dm = new DataManipulator();
+//        	}
+
+			import com.maccherone.mpv.Utils;
+			import mx.charts.DateTimeAxis;
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import flash.xml.XMLNode;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.events.FaultEvent;
+
+			private var bugCommitURLRequest:URLRequest;
+			private var bugURLRequest:URLRequest;
+			private var commitURLRequest:URLRequest;
+			private var communicationURLRequest:URLRequest;
+
+			private var releaseDatesInRange:Array=new Array();
+
+			private var fToFChanged:Boolean=false;
+			private var dateRangeChanged:Boolean=false;
+
+			[Bindable]
+			public var resultedBugs:ArrayCollection;
+			[Bindable]
+			public var mltBugs:ArrayCollection;
+			public var similarBugs:Object;
+
+//        	[Bindable]
+			private var generalDataLoader:MultiURLLoader;
+			private var namesURLRequest:URLRequest;
+
+			// list of file extensions, including "show all" for no filter, 
+			// "select all" to select all interesting extensions
+			[Bindable]
+			public var fileExtensions:ArrayCollection=new ArrayCollection(["select all", "show all", ".c", ".cpp", ".h", ".hpp", ".hxx", ".cxx", ".py", ".cs"]);
+
+			public function clearDrillDown():void
+			{
+				dm.visibleDeveloperIDs=null;
+				dm.visibleFileIDs=null;
+				dm.visiblePacks=null;
+				dm.packages=[]; // clear the packages list
+				// TODO: Add for Bugs. Drill down		
+				this.recalculateAndDisplayFToF();
+				this.recalculateAndDisplayDToD();
+				// TODO: Add here for bugs. Drill down
+				this.clearDrillDownButton.visible=false;
+			}
+
+			/* public function getReleaseDatesInRange(event:MouseEvent):void{
+			   var i:Number;
+			   var btn:Button = Button(event.target);
+
+			   if(btn.label == "Show releases"){
+			   for(i = 0; i < dm.releaseEpochDays.length; i++){
+			   if((dm.releaseEpochDays[i] >= dateRangeSlider.minimum) && (dm.releaseEpochDays[i] <= dateRangeSlider.maximum)){
+			   releaseDatesInRange.push(dm.releaseEpochDays[i]);
+			   }
+			   }
+
+			   dateRangeSlider.tickValues=releaseDatesInRange;
+			   btn.label="Turn off releases";
+			   }else{
+			   dateRangeSlider.tickValues=null;
+			   btn.label="Show releases";
+			   }
+			   }
+			 */
+			public function getReleasesInRange():void
+			{
+				var i:Number;
+				var j:Number=0;
+				for (i=0; i < dm.releaseEpochDays.length; i++)
+				{
+					if ((dm.releaseEpochDays[i] >= dm.whenMin) && (dm.releaseEpochDays[i] <= dm.whenMax))
+					{
+						releaseDatesInRange[j]=dm.releaseEpochDays[i];
+						j++;
+					}
+				}
+
+				dateRangeSlider.tickValues=releaseDatesInRange;
+			}
+
+			public function dateSliderChangeHandler():void
+			{
+				dateRangeSlider.getThumbAt(0).toolTip="";
+				dateRangeSlider.getThumbAt(1).toolTip="";
+			}
+
+			public function filterBySelected():void
+			{
+				dm.visibleDeveloperIDs=getSelectedIDs(developerList);
+				dm.visibleFileIDs=getSelectedIDs(fileList);
+				this.recalculateAndDisplayDToD();
+				this.recalculateAndDisplayFToF();
+				// TODO: Add here for bugs. I think this only applies in drill-down
+				this.clearDrillDownButton.visible=true;
+			}
+
+			public function getSelectedDeveloperNodes():Array
+			{
+				var selectedNodes:Array=[];
+				var selectedIDs:Object=getSelectedIDs(this.developerList);
+				for (var d:String in selectedIDs)
+				{
+					selectedNodes.push(MPVNode(Item(dm.dToDGraph.nodes[d]).data["MPVNode"]));
+				}
+				return selectedNodes;
+			}
+
+			public function getSelectedIDs(dg:DataGrid):Object
+			{
+				var temp:Object={};
+				for each (var item:Object in dg.selectedItems)
+				{
+					temp[item.id]=true;
+				}
+				return temp;
+			}
+
+			public function isSelectedDeveloper(d:String):Boolean
+			{
+				return getSelectedIDs(this.developerList).hasOwnProperty(d);
+			}
+
+			public function isSelectedFile(f:String):Boolean
+			{
+				return getSelectedIDs(this.fileList).hasOwnProperty(f);
+			}
+
+			public function isSelectedPackage(p:String):Boolean
+			{
+				return (dm.packages.indexOf(p) >= 0);
+			}
+
+			private function dToDModeChanged(event:ItemClickEvent):void
+			{
+				dm.dToDMode=event.currentTarget.selectedValue;
+			}
+
+			private function dToDSettingsToggle():void
+			{
+				if (developerBox.visible)
+				{
+					developerBox.visible=false;
+					developerBox.height=0;
+					recalculateAndDisplayDToD();
+					dToDSettingsButton.label="Show Settings";
+				}
+				else
+				{
+					developerBox.visible=true;
+					developerBox.height=undefined;
+					dToDSettingsButton.label="OK";
+				}
+			}
+
+			// mark f-f as changed if thresholds or file filter change
+			private function isFToFChanged():void
+			{
+				fToFChanged=true;
+			}
+
+			private function fToFSettingsToggle():void
+			{
+				if (fileBox.visible)
+				{
+					fileBox.visible=false;
+					fileBox.height=0;
+					recalculateAndDisplayFToF();
+					// recalculate DToD if fToF changed
+					if (fToFChanged)
+					{
+						recalculateAndDisplayDToD();
+						fToFChanged=false;
+					}
+					fToFSettingsButton.label="Show Settings";
+				}
+				else
+				{
+					fileBox.visible=true;
+					fileBox.height=undefined;
+					fToFSettingsButton.label="OK";
+				}
+			}
+
+			// a function to set committed together threshold to default, called on date range change
+			private function setCommittedTogetherThresholdToDefault():void
+			{
+				if (committedTogetherThreshold.value == 0)
+				{
+					committedTogetherThreshold.value=5;
+					dm.committedTogetherThreshold=5;
+				}
+			/* if(committedTogetherThreshold.value == 0 && dm.committedTogetherMax >= 5){
+			   // reset committed together threshold to 5 if previous is 0 and max greater than 5
+			   committedTogetherThreshold.value = 5;
+			   dm.committedTogetherThreshold = 5;
+			   }else if((committedTogetherThreshold.value == 0 && dm.committedTogetherMax < 5) ||
+			   dm.committedTogetherMax < committedTogetherThreshold.value){
+			   // reset committed together threshold to max if max less than previous value
+			   committedTogetherThreshold.value = dm.committedTogetherMax;
+			   dm.committedTogetherThreshold = dm.committedTogetherMax;
+			 } */
+			}
+
+			// reset options to default, called on project change
+			private function setDefault():void
+			{
+				fileNumberThreshold.value=20;
+				committedTogetherThreshold.value=5;
+				fToFRepulsionSlider.value=1.4;
+
+				// reset file filter
+				fileFilter.selectedIndex=0;
+				dm.selectedExtensions=["select all"];
+
+				email.selected=true;
+				comment.selected=true;
+				activity.selected=true;
+				dToDRepulsionSlider.value=2.0;
+				dToDMode.selectedValue="congruence";
+
+				enhancement.selected=true;
+				trivial.selected=true;
+				minor.selected=true;
+				normal.selected=true;
+				major.selected=true;
+				critical.selected=true;
+				blockerBox.selected=true;
+
+				dm.visibleDeveloperIDs=null;
+				dm.visibleFileIDs=null;
+				dm.visiblePacks=null;
+				this.clearDrillDownButton.visible=false;
+			}
+
+			// set visiblity of display objects, switch between the visiblity of 
+			// recalcualting progress bar and other objects 
+			public function setVisibility(visible:Boolean):void
+			{
+				//projectRecalculatingProgressBar.visible=!visible;
+				projectActivityBox.visible=visible;
+				developerDividedBox.visible=visible;
+				fileDividedBox.visible=visible;
+				bugTabs.visible=visible;
+				//searchBox.visible=visible;
+				displayControlsBox.visible=visible;
+			}
+
+			private function filesLoaded(event:Event):void
+			{
+				dm.stopWatch.interval("Got back from multiFileLoader, starting to convert XML");
+				dm.names=Utils.TXTToArray(generalDataLoader.urlInfo[namesURLRequest].data);
+				dm.personIDToName={};
+				dm.nextName=0;
+				dm.commitsXML=new XML(generalDataLoader.urlInfo[commitURLRequest].data);
+				dm.originalCommits=Utils.XMLListToArray(dm.commitsXML.commit);
+				dm.communicationXML=new XML(generalDataLoader.urlInfo[communicationURLRequest].data);
+				dm.communication=Utils.XMLListToArray(dm.communicationXML.comm); // Later change this to originalCommunication
+				dm.bugXML=new XML(generalDataLoader.urlInfo[bugURLRequest].data);
+				dm.originalBugs=Utils.XMLListToArray(dm.bugXML.bug);
+				dm.bugCommitXML=new XML(generalDataLoader.urlInfo[bugCommitURLRequest].data);
+				dm.bugCommit=Utils.XMLListToArray(dm.bugCommitXML.bugCommit);
+
+				// TODO: Fix this. It's such a hack. Make the name obfuscator a class
+				// TODO: Name obfuscator turned off temporarily
+//				dm.nextName = Utils.obfuscateNames(dm.originalCommits, dm.names, dm.nextName, dm.personIDToName);
+//				trace("nextName after first call to obfuscateNames" + dm.nextName);
+//				dm.communication = Utils.removeExtras(dm.communication, dm.personIDToName, "person_id");
+//				Utils.obfuscateNames(dm.communication, dm.names, dm.nextName, dm.personIDToName);
+
+				dm.stopWatch.interval("Calculating CommitsCleaned");
+				dm.calculateCommitsCleaned();
+				dm.stopWatch.interval("Calculating BugIDToD");
+				dm.calculateBugIDToD();
+				dm.stopWatch.interval("Calculating BugIDToF");
+				dm.calculateBugIDToF();
+
+				projectLoadingProgressBar.visible=false;
+				//projectRecalculatingProgressBar.visible=true;
+
+				dm.calculateProjectActivity();
+				dm.whenRange=[dm.whenMin, dm.whenMin + 90];
+
+				var tempDateTimeAxis:DateTimeAxis=new DateTimeAxis()
+				tempDateTimeAxis.alignLabelsToUnits=true;
+				tempDateTimeAxis.dataUnits="days";
+				tempDateTimeAxis.dataInterval=1;
+				tempDateTimeAxis.labelUnits="days";
+				tempDateTimeAxis.maximum=Utils.dateFromEpochNumber(dm.whenMax);
+				tempDateTimeAxis.minimum=Utils.dateFromEpochNumber(dm.whenMin);
+				tempDateTimeAxis.labelFunction=dm.labelFormatter;
+//				projectCommitsSeries.dataProvider = dm.projectCommits;
+//				projectCommunicationSeries.dataProvider = dm.projectCommits;
+
+				projectActivity.horizontalAxis=tempDateTimeAxis;
+				getReleasesInRange();
+				onDateRangeChanged();
+			}
+
+			private function onApplicationComplete():void
+			{
+				dm.setApplication(this);
+				var projectsURL:String=dm.baseURL + "projectList.xml";
+				var projectsURLRequest:URLRequest=new URLRequest(projectsURL);
+				var projectsURLLoader:URLLoader=new URLLoader();
+				projectsURLLoader.addEventListener(Event.COMPLETE, onProjectsLoaded);
+				projectsURLLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
+				projectsURLLoader.load(projectsURLRequest);
+			}
+
+			private function onBugFilterChange():void
+			{
+				dm.bugs=Utils.filterBy(dm.originalBugs, dm.bugPredicate);
+				Utils.removeZeroFromStrField(dm.bugs, "bug_resolution");
+				dm.calculateOpenBugs();
+
+				var tempDateTimeAxis:DateTimeAxis=new DateTimeAxis()
+				tempDateTimeAxis.alignLabelsToUnits=true;
+				tempDateTimeAxis.dataUnits="days";
+				tempDateTimeAxis.dataInterval=1;
+				tempDateTimeAxis.labelUnits="days";
+				tempDateTimeAxis.maximum=Utils.dateFromEpochNumber(dm.whenRange[1]);
+				tempDateTimeAxis.minimum=Utils.dateFromEpochNumber(dm.whenRange[0]);
+				tempDateTimeAxis.labelFunction=dm.labelFormatter;
+
+				openBugs.dataProvider=dm.openBugs;
+				openBugs.horizontalAxis=tempDateTimeAxis;
+//				trace("tracing stack data from openbugs");	
+//				for each (var tempRow:Object in dm.openBugs) {
+//					trace("date:"+tempRow.date + 
+//							"enhancement:"+tempRow.enhancement + 
+//							"trivial:"+tempRow.trivial +
+//							"minor:"+tempRow.minor + 
+//							"normal:"+tempRow.normal + 
+//							"major:"+tempRow.major + 
+//							"critical:"+tempRow.critical + 
+//							"blocker:"+tempRow.blocker
+//						);
+//				}	
+
+			}
+
+			private function onBugListSelected(event:Event):void
+			{
+				var bugDataGrid:DataGrid=event.currentTarget as DataGrid;
+				var selectedBugs:Array=[];
+
+				if (!overviewBugToReleaseBtn.visible)
+				{
+					overviewBugToReleaseBtn.visible=true;
+				}
+				searchedBugToReleaseBtn.visible=false;
+				similarBugToReleaseBtn.visible=false;
+				dgBug.selectedIndices=[];
+				moreBugsLikeThis.selectedIndices=[];
+				for each (var index:*in bugDataGrid.selectedIndices)
+				{
+					selectedBugs.push(dm.bugs[index]);
+
+				}
+				dm.highlightFromBugListClick(selectedBugs);
+			}
+
+			private function onSearchedBugListSelected(event:Event):void
+			{
+				var target:DataGrid=event.currentTarget as DataGrid;
+				var selectedBug:Object=target.dataProvider[target.selectedIndex];
+				var selectedBugs:Array=[selectedBug];
+				if (!searchedBugToReleaseBtn.visible)
+				{
+					searchedBugToReleaseBtn.visible=true;
+				}
+				similarBugToReleaseBtn.visible=false;
+				overviewBugToReleaseBtn.visible=false;
+				bugList.selectedIndices=[];
+				moreBugsLikeThis.selectedIndices=[];
+				dm.highlightFromBugListClick(selectedBugs);
+			}
+
+			private function onSimilarBugListSelected(event:Event):void
+			{
+				var target:DataGrid=event.currentTarget as DataGrid;
+				var selectedBug:Object=target.dataProvider[target.selectedIndex];
+				var selectedBugs:Array=[selectedBug];
+				if (!similarBugToReleaseBtn.visible)
+				{
+					similarBugToReleaseBtn.visible=true;
+				}
+				searchedBugToReleaseBtn.visible=false;
+				overviewBugToReleaseBtn.visible=false;
+				dgBug.selectedIndices=[];
+				bugList.selectedIndices=[];
+				dm.highlightFromBugListClick(selectedBugs);
+			}
+
+			private function displayOverviewBugInRelease():void{
+				var selectedBug:Object = dm.bugs[bugList.selectedIndex];
+				var bugIndex:int=-1;
+				displayBugInRelease(selectedBug);
+				for (var i:int=0; i<dm.bugs.length; i++){
+					if(dm.bugs[i].bug_id == selectedBug.bug_id)
+						bugIndex=i;
+				}
+				bugList.selectedIndex = bugIndex;
+			}
+			private function displayBugInRelease(selectedBug:Object):void
+			{
+				var selectedBugs:Array=[selectedBug];
+				//releaseCalculatingProgressBar.visible = true;
+				dm.whenRange=dm.getBugReleaseInfo(selectedBug);
+				onDateRangeChanged();
+				dm.highlightFromBugListClick(selectedBugs);
+				//releaseCalculatingProgressBar.visible = false;
+				searchedBugToReleaseBtn.visible=false;
+				similarBugToReleaseBtn.visible=false;
+				overviewBugToReleaseBtn.visible=false;
+			}
+
+//			private function onDeveloperListSelected(event:Event):void {
+//				dm.developerListClick(developerList.selectedIndices);		
+//		    }
+//
+//			private function onFileListSelected(event:Event):void {
+//				dm.fileListClick(fileList.selectedIndices);		
+//		    }
+
+			private function onDateRangeChanged():void
+			{
+				//projectRecalculatingProgressBar.visible=true;
+				projectActivityBox.visible=false;
+				developerDividedBox.visible=false;
+				fileDividedBox.visible=false;
+				bugTabs.visible=false;
+				//searchBox.visible=false;
+				displayControlsBox.visible=false;
+
+				// reset committed together threshold to default if previous is 0
+				setCommittedTogetherThresholdToDefault();
+
+				dm.stopWatch.interval("Starting recalculateAndDisplayFToF()");
+				recalculateAndDisplayFToF();
+				dm.stopWatch.interval("Starting recalculateAndDisplayDToD()");
+				recalculateAndDisplayDToD();
+				dm.stopWatch.interval("Starting onBugFilterChange()");
+				onBugFilterChange();
+				dm.stopWatch.interval("StopWatch Stop");
+
+				//projectRecalculatingProgressBar.visible=false;
+				projectActivityBox.visible=true;
+				developerDividedBox.visible=true;
+				fileDividedBox.visible=true;
+				bugTabs.visible=true;
+				//searchBox.visible=true;
+				displayControlsBox.visible=true;
+				dateRangeSlider.getThumbAt(0).toolTip=dm.toolTipFormatterWithRelease(dm.whenRange[0]);
+				dateRangeSlider.getThumbAt(1).toolTip=dm.toolTipFormatterWithRelease(dm.whenRange[1]);
+			}
+
+			private function onError(event:Event):void
+			{
+				throw new Error("File I/O Error:" + event.toString());
+			}
+
+			private function onProjectIDChange():void
+			{
+				dm.stopWatch.start("Starting to load Files");
+
+				if (projectComboBox.selectedItem.project_id == 0)
+				{
+					fToF.empty();
+					dToD.empty();
+					projectActivityBox.visible=false;
+					dToDSettingsButton.visible=false;
+					fToFSettingsButton.visible=false
+					fileSearchButton.visible=false;
+					developerSearchButton.visible=false;
+					developerDividedBox.visible=false;
+					fileDividedBox.visible=false;
+					bugTabs.visible=false;
+					//searchBox.visible=false;
+					displayControlsBox.visible=false;
+					return;
+				}
+
+				setDefault();
+				dm.packages=[]; // empty the packages list
+				projectLoadingProgressBar.visible=true;
+				projectActivityBox.visible=false;
+				dToDSettingsButton.visible=true;
+				fToFSettingsButton.visible=true
+				fileSearchButton.visible=true;
+				developerSearchButton.visible=true;
+				developerDividedBox.visible=false;
+				fileDividedBox.visible=false;
+				bugTabs.visible=false;
+				//searchBox.visible=false;
+				displayControlsBox.visible=false;
+
+				dm.projectID=projectComboBox.selectedItem.project_id;
+
+				var commitURL:String=dm.baseURL + "commit" + dm.projectID.toString() + ".xml";
+				var communicationURL:String=dm.baseURL + "communication" + dm.projectID.toString() + ".xml";
+				var bugURL:String=dm.baseURL + "bugs" + dm.projectID.toString() + ".xml";
+				var bugCommitURL:String=dm.baseURL + "bugCommit" + dm.projectID.toString() + ".xml";
+				var namesURL:String=dm.baseURL + "names.txt";
+				commitURLRequest=new URLRequest(commitURL);
+				communicationURLRequest=new URLRequest(communicationURL);
+				bugURLRequest=new URLRequest(bugURL);
+				bugCommitURLRequest=new URLRequest(bugCommitURL);
+				namesURLRequest=new URLRequest(namesURL);
+
+				generalDataLoader=new MultiURLLoader();
+				generalDataLoader.addURLRequest(commitURLRequest);
+				generalDataLoader.addURLRequest(communicationURLRequest);
+				generalDataLoader.addURLRequest(bugURLRequest);
+				generalDataLoader.addURLRequest(bugCommitURLRequest);
+				generalDataLoader.addURLRequest(namesURLRequest);
+				generalDataLoader.addEventListener(Event.COMPLETE, filesLoaded);
+				generalDataLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
+				generalDataLoader.load();
+				dm.stopWatch.interval("Calling multiFileLoader.load()");
+			}
+
+			private function onProjectsLoaded(event:Event):void
+			{
+				dm.projectsXML=new XML(event.target.data);
+				var tempArray:Array=Utils.XMLListToArray(dm.projectsXML.project);
+				tempArray.push({"project_id": 0, "project_name": "select a project", "startWhen": 11000, "endWhen": 14000});
+				tempArray.sortOn("project_id");
+				dm.projects=new ArrayCollection(tempArray);
+			}
+
+			private function recalculateAndDisplayDToD():void
+			{
+				dm.clearAllColor();
+				dToD.empty();
+				dm.stopWatch.interval("Starting calculateDToDGraph");
+				dm.calculateDToDGraph();
+				dToD.forceDirectedLayout.damper=0.3;
+				dm.stopWatch.interval("Setting dToD dataProvider");
+				dToD.dataProvider=dm.dToDGraph;
+			}
+
+			private function recalculateAndDisplayFToF():void
+			{
+				dm.clearAllColor();
+				fToF.empty();
+				if (dm.selectedExtensions && dm.selectedExtensions.indexOf("show all") >= 0)
+				{
+					dm.calculateCommitsCleaned();
+				}
+				dm.calculateFToFGraph();
+				fToF.forceDirectedLayout.damper=0.3;
+				fToF.dataProvider=dm.fToFGraph;
+
+			}
+
+			public function searchBug():void
+			{
+				if (query.text)
+				{
+					var params:Object={};
+					var queryStr:String=query.text;
+
+					/* queryStr += " AND start_when:[" + dm.whenMin + " TO " + dm.whenRange[1]
+					 + "] NOT end_when:[" + dm.whenMin + " TO " + dm.whenRange[0] + "]"; */
+
+					if (!duplicate.selected)
+					{
+						queryStr+=" NOT bug_resolution:DUPLICATE";
+					}
+
+					if (!wontFix.selected)
+					{
+						queryStr+=" NOT bug_resolution:WONTFIX";
+					}
+
+					if (!notABug.selected)
+					{
+						queryStr+=" NOT bug_resolution:NOTABUG";
+					}
+
+					params["q"]=queryStr;
+					params["rows"]=rowsCountStepper.value;
+					params["hl"]=true;
+					params["hl.fl"]="bug_desc";
+					params["hl.simple.pre"]="<b>";
+					params["hl.simple.post"]="</b>";
+					solr.send(params);
+					// update date and graph while waiting for search response
+					if (dateRangeChanged)
+					{
+						dateRangeChanged=false;
+						onDateRangeChanged();
+					}
+				}
+			}
+
+			public function mltSearch(event:Event):void
+			{
+				var target:DataGrid=event.currentTarget as DataGrid;
+				var selectedBug:Object=target.dataProvider[target.selectedIndex];
+
+				if (selectedBug.hasOwnProperty("bug_id"))
+				{
+					var params:Object={};
+					params["q"]="bug_id:" + selectedBug.bug_id;
+					params["rows"]=10;
+					mltSolr.send(params);
+					moreBugsLabel.htmlText="More bugs like bug " + selectedBug.bug_id + ": " + selectedBug.bug_desc;
+					overviewBugToReleaseBtn.visible = false;
+					searchedBugToReleaseBtn.visible = false;
+					similarBugToReleaseBtn.visible = false;
+					bugTabs.selectedIndex=2;
+				}
+			}
+
+			public function httpResult(resultEvent:ResultEvent):void
+			{
+				//var solrResponse:Object=resultEvent.result;
+				resultedBugs=new ArrayCollection();
+				similarBugs={};
+				// Process result
+				var solrXML:XML=new XML(resultEvent.result as XMLNode);
+				searchResultHandler(solrXML);
+
+				// Display result
+				if (!resultBox.visible)
+				{
+					//setSearchColumnWidth();
+					resultBox.visible=true;
+				}
+			}
+
+			public function mltResult(resultEvent:ResultEvent):void
+			{
+				//var mltResponse:Object = resultEvent.result;
+				mltBugs=new ArrayCollection();
+				var mltXML:XML=new XML(resultEvent.result as XMLNode);
+				for each (var child:XML in mltXML.children())
+				{
+					var type:String=child.name();
+					var name:String=child.@name;
+					if (type == "result" && name == "response")
+					{
+						processResult(child, mltBugs);
+					}
+				}
+
+				// display more bugs like this
+				// moreBugsLikeThis.dataProvider=mltBugs;
+				if (!moreBugsLabel.visible)
+					moreBugsLabel.visible=true;
+				if (!moreBugsLikeThis.visible)
+				{
+					setMltColumnWidth();
+					moreBugsLikeThis.visible=true;
+				}
+
+				//bugTabs.selectedIndex=2;
+			}
+
+			public function httpFault(faultEvent:FaultEvent):void
+			{
+				var faultstring:String=faultEvent.fault.faultString;
+				trace(faultstring);
+			}
+
+			public function searchResultHandler(solrResponse:XML):void
+			{
+				for each (var child:XML in solrResponse.children())
+				{
+					var type:String=child.name();
+					var name:String=child.@name;
+					if (type == "result" && name == "response")
+					{
+						processResult(child, resultedBugs);
+					}
+					/* else if (type == "lst" && name == "moreLikeThis")
+					   {
+					   for each (var similarDocs:XML in child.children())
+					   {
+					   var moreDocs:ArrayCollection=new ArrayCollection();
+					   processResult(similarDocs, moreDocs);
+					   similarBugs[similarDocs.@name]=moreDocs;
+					   }
+					 } */
+				}
+				processHighlighting(solrResponse);
+			}
+
+			public function processResult(xml:XML, docs:ArrayCollection):void
+			{
+				for each (var doc:XML in xml.children())
+				{
+					var bug:Object=new Object();
+					for each (var str:XML in doc.children())
+					{
+						bug[str.@name]=str.valueOf().toString();
+					}
+					if (bug)
+						docs.addItem(bug);
+				}
+			}
+
+			public function processHighlighting(solrResponse:XML):void
+			{
+				for each (var child:XML in solrResponse.children())
+				{
+					var type:String=child.name();
+					var name:String=child.@name;
+					if (type == "lst" && name == "highlighting")
+					{
+						var i:int=0;
+						for each (var highlightedBug:XML in child.children())
+						{
+							var bugID:String=resultedBugs[i]["bug_id"];
+							var hlID:String=highlightedBug.@name;
+							if (resultedBugs[i]["bug_id"] == highlightedBug.@name)
+							{
+								for each (var arr:XML in highlightedBug.children())
+								{
+									for each (var str:XML in arr.children())
+									{
+										// already set <b>keyword</b> in query
+										resultedBugs[i][arr.@name]=str.valueOf().toString();
+									}
+								}
+							}
+							i++;
+						}
+					}
+				}
+			}
+
+			public function setSearchColumnWidth():void
+			{
+				searchColumnID.width=60;
+				searchColumnStartWhen.width=90;
+				searchColumnEndWhen.width=90;
+				searchColumnSeverity.width=90;
+				searchColumnPriority.width=60;
+				searchColumnStatus.width=90;
+				searchColumnResolution.width=90;
+			}
+
+			public function setMltColumnWidth():void
+			{
+				mltColumnID.width=60;
+				mltColumnStartWhen.width=90;
+				mltColumnEndWhen.width=90;
+				mltColumnSeverity.width=90;
+				mltColumnPriority.width=60;
+				mltColumnStatus.width=90;
+				mltColumnResolution.width=90;
+			}
+
+			public function showAdvancedSearch():void
+			{
+				if (advancedBtn.label == "OK")
+				{
+					advancedBtn.label="Advanced";
+					searchDateLabel.visible=false;
+					searchDateSlider.visible=false;
+					searchFilterLabel.visible=false;
+					duplicate.visible=false;
+					wontFix.visible=false;
+					notABug.visible=false;
+					rowsCountLabel.visible=false;
+					rowsCountStepper.visible=false;
+				}
+				else
+				{
+					advancedBtn.label="OK";
+					searchDateLabel.visible=true;
+					searchDateSlider.visible=true;
+					searchFilterLabel.visible=true;
+					duplicate.visible=true;
+					wontFix.visible=true;
+					notABug.visible=true;
+					rowsCountLabel.visible=true;
+					rowsCountStepper.visible=true;
+				}
+			}
+
+			public function onSearchDateSliderChange():void
+			{
+				dateRangeChanged=true;
+			}
+
+			public function fileSearchButtonClicked():void
+			{
+				if (fileSearchBox.visible)
+				{
+					fileSearchBox.visible=false;
+					fileSearchBox.height=0;
+				}
+				else
+				{
+					fileSearchBox.visible=true;
+					fileSearchBox.height=undefined;
+				}
+			}
+
+			public function developerSearchButtonClicked():void
+			{
+				if (developerSearchBox.visible)
+				{
+					developerSearchBox.visible=false;
+					developerSearchBox.height=0;
+				}
+				else
+				{
+					developerSearchBox.visible=true;
+					developerSearchBox.height=undefined;
+				}
+			}
+			public function developerIdToName(bug:Object, column:DataGridColumn):String {
+				return dm.developers[bug["assigned_to"]];
+			}
+
+		]]>
+	</mx:Script>
+
+</mx:WindowedApplication>
