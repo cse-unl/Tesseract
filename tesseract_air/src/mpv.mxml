@@ -498,8 +498,7 @@
 		</mx:HDividedBox>
 		<mx:Panel title="Issues"
 				  height="30%"
-				  width="100%"
-				  headerHeight="20">
+				  width="100%">
 			<mx:TabNavigator id="bugTabs"
 							 visible="false"
 							 height="100%"
@@ -853,7 +852,50 @@
 					</mx:DataGrid>
 				</mx:VBox>
 				<mx:VBox label="Bug details">
-
+					<mx:DataGrid id="selectedBugDetails"
+								 dataProvider="{detailedBug}"
+								 rowCount="1"
+								 width="100%"
+								 change="{onSimilarBugListSelected(event)}"
+								 doubleClickEnabled="true"
+								 doubleClick="mltSearch(event)"
+								 toolTip="Double click to see similar bugs"
+								 selectionColor="{dm.selectNodeColor}"
+								 alternatingItemColors="[#EAF7FB, #FFFFFF]">
+						<mx:columns>
+							<mx:DataGridColumn id="selectedBugColumnID"
+											   headerText="Bug ID"
+											   dataField="bug_id"/>
+							<mx:DataGridColumn id="selectedBugColumnStartWhen"
+											   headerText="Start"
+											   dataField="start_when"
+											   labelFunction="dm.startDateFormatter"/>
+							<mx:DataGridColumn id="selectedBugColumnEndWhen"
+											   headerText="End"
+											   dataField="end_when"
+											   labelFunction="dm.endDateFormatter"/>
+							<mx:DataGridColumn id="selectedBugColumnSeverity"
+											   headerText="Severity"
+											   dataField="bug_severity"/>
+							<mx:DataGridColumn id="selectedBugColumnPriority"
+											   headerText="Priority"
+											   dataField="bug_priority"/>
+							<mx:DataGridColumn id="selectedBugColumnStatus"
+											   headerText="Status"
+											   dataField="bug_status"/>
+							<mx:DataGridColumn id="selectedBugColumnResolution"
+											   headerText="Resolution"
+											   dataField="bug_resolution"/>
+							<mx:DataGridColumn id="selectedBugColumnDesc"
+											   headerText="Description"
+											   dataField="bug_desc"
+											   itemRenderer="selectableText"/>
+						</mx:columns>
+					</mx:DataGrid>
+					<mx:Label id="bugLongDescLabel"
+							  text="Long description:"/>
+					<mx:Label id="bugActivityLabel"
+							  text="Bug activities:"/>
 				</mx:VBox>
 			</mx:TabNavigator>
 		</mx:Panel>
@@ -916,7 +958,8 @@
 			[Bindable]
 			public var mltBugs:ArrayCollection;
 			public var similarBugs:Object;
-
+			[Bindable]
+			public var detailedBug:ArrayCollection;
 //        	[Bindable]
 			private var generalDataLoader:MultiURLLoader;
 			private var namesURLRequest:URLRequest;
@@ -1254,6 +1297,7 @@
 
 				}
 				dm.highlightFromBugListClick(selectedBugs);
+				detailedBug=new ArrayCollection(selectedBugs);
 			}
 
 			private function onSearchedBugListSelected(event:Event):void
@@ -1261,6 +1305,7 @@
 				var target:DataGrid=event.currentTarget as DataGrid;
 				var selectedBug:Object=target.dataProvider[target.selectedIndex];
 				var selectedBugs:Array=[selectedBug];
+				detailedBug=new ArrayCollection(selectedBugs);
 				if (!searchedBugToReleaseBtn.visible)
 				{
 					searchedBugToReleaseBtn.visible=true;
@@ -1277,6 +1322,7 @@
 				var target:DataGrid=event.currentTarget as DataGrid;
 				var selectedBug:Object=target.dataProvider[target.selectedIndex];
 				var selectedBugs:Array=[selectedBug];
+				detailedBug=new ArrayCollection(selectedBugs);
 				if (!similarBugToReleaseBtn.visible)
 				{
 					similarBugToReleaseBtn.visible=true;
@@ -1288,16 +1334,19 @@
 				dm.highlightFromBugListClick(selectedBugs);
 			}
 
-			private function displayOverviewBugInRelease():void{
-				var selectedBug:Object = dm.bugs[bugList.selectedIndex];
+			private function displayOverviewBugInRelease():void
+			{
+				var selectedBug:Object=dm.bugs[bugList.selectedIndex];
 				var bugIndex:int=-1;
 				displayBugInRelease(selectedBug);
-				for (var i:int=0; i<dm.bugs.length; i++){
-					if(dm.bugs[i].bug_id == selectedBug.bug_id)
+				for (var i:int=0; i < dm.bugs.length; i++)
+				{
+					if (dm.bugs[i].bug_id == selectedBug.bug_id)
 						bugIndex=i;
 				}
-				bugList.selectedIndex = bugIndex;
+				bugList.selectedIndex=bugIndex;
 			}
+
 			private function displayBugInRelease(selectedBug:Object):void
 			{
 				var selectedBugs:Array=[selectedBug];
@@ -1503,9 +1552,9 @@
 					params["rows"]=10;
 					mltSolr.send(params);
 					moreBugsLabel.htmlText="More bugs like bug " + selectedBug.bug_id + ": " + selectedBug.bug_desc;
-					overviewBugToReleaseBtn.visible = false;
-					searchedBugToReleaseBtn.visible = false;
-					similarBugToReleaseBtn.visible = false;
+					overviewBugToReleaseBtn.visible=false;
+					searchedBugToReleaseBtn.visible=false;
+					similarBugToReleaseBtn.visible=false;
 					bugTabs.selectedIndex=2;
 				}
 			}
@@ -1710,10 +1759,11 @@
 					developerSearchBox.height=undefined;
 				}
 			}
-			public function developerIdToName(bug:Object, column:DataGridColumn):String {
+
+			public function developerIdToName(bug:Object, column:DataGridColumn):String
+			{
 				return dm.developers[bug["assigned_to"]];
 			}
-
 		]]>
 	</mx:Script>
 
