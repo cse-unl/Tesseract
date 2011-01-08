@@ -306,6 +306,7 @@
 											  enter="dm.searchHighlight(event)"/>
 							</mx:HBox>
 							<mx:DataGrid id="fileList"
+										 width="100%"
 										 height="100%"
 										 alternatingItemColors="[#EAF7FB, #FFFFFF]"
 										 change="dm.fileListClick()"
@@ -442,6 +443,7 @@
 											  enter="dm.searchHighlight(event)"/>
 							</mx:HBox>
 							<mx:DataGrid id="developerList"
+										 width="100%"
 										 height="100%"
 										 alternatingItemColors="[#EAF7FB, #FFFFFF]"
 										 change="dm.developerListClick()"
@@ -650,7 +652,7 @@
 											   width="90"/>
 							<mx:DataGridColumn headerText="Assigned to"
 											   dataField="assigned_to"
-											   width="90"/>
+											   width="120"/>
 							<mx:DataGridColumn headerText="Status"
 											   dataField="bug_status"
 											   width="90"/>
@@ -760,10 +762,10 @@
 												   headerText="Severity"
 												   dataField="bug_severity"
 												   width="90"/>
-								<mx:DataGridColumn id="searchColumnPriority"
-												   headerText="Priority"
-												   dataField="bug_priority"
-												   width="60"/>
+								<mx:DataGridColumn id="searchColumnAssignedTo"
+												   headerText="Assigned to"
+												   dataField="assigned_to_name"
+												   width="120"/>
 								<mx:DataGridColumn id="searchColumnStatus"
 												   headerText="Status"
 												   dataField="bug_status"
@@ -788,8 +790,7 @@
 				</mx:VBox>
 
 				<mx:VBox id="similarBugsBox"
-						 label="Similar Bugs"
-						 verticalScrollPolicy="off">
+						 label="Similar Bugs">
 					<mx:HBox width="100%">
 						<mx:Canvas width="100%">
 							<mx:Label id="moreBugsLabel"
@@ -811,7 +812,7 @@
 					</mx:HBox>
 					<mx:DataGrid id="moreBugsLikeThis"
 								 dataProvider="{mltBugs}"
-								 rowCount="5"
+								 rowCount="30"
 								 visible="false"
 								 width="100%"
 								 change="{onSimilarBugListSelected(event)}"
@@ -835,9 +836,9 @@
 							<mx:DataGridColumn id="mltColumnSeverity"
 											   headerText="Severity"
 											   dataField="bug_severity"/>
-							<mx:DataGridColumn id="mltColumnPriority"
-											   headerText="Priority"
-											   dataField="bug_priority"/>
+							<mx:DataGridColumn id="mltColumnAssignedTo"
+											   headerText="Assigned to"
+											   dataField="assigned_to_name"/>
 							<mx:DataGridColumn id="mltColumnStatus"
 											   headerText="Status"
 											   dataField="bug_status"/>
@@ -851,50 +852,58 @@
 						</mx:columns>
 					</mx:DataGrid>
 				</mx:VBox>
-				<mx:VBox label="Bug details">
-					<mx:DataGrid id="selectedBugDetails"
+				<mx:VBox label="Bug details"
+						 activate="{onBugDetailsTabClicked()}">
+					<mx:DataGrid id="bugDetails"
 								 dataProvider="{detailedBug}"
+								 visible="false"
 								 rowCount="1"
 								 width="100%"
-								 change="{onSimilarBugListSelected(event)}"
 								 doubleClickEnabled="true"
 								 doubleClick="mltSearch(event)"
 								 toolTip="Double click to see similar bugs"
-								 selectionColor="{dm.selectNodeColor}"
 								 alternatingItemColors="[#EAF7FB, #FFFFFF]">
 						<mx:columns>
-							<mx:DataGridColumn id="selectedBugColumnID"
+							<mx:DataGridColumn id="bugDetailsColumnID"
 											   headerText="Bug ID"
 											   dataField="bug_id"/>
-							<mx:DataGridColumn id="selectedBugColumnStartWhen"
+							<mx:DataGridColumn id="bugDetailsColumnStartWhen"
 											   headerText="Start"
 											   dataField="start_when"
 											   labelFunction="dm.startDateFormatter"/>
-							<mx:DataGridColumn id="selectedBugColumnEndWhen"
+							<mx:DataGridColumn id="bugDetailsColumnEndWhen"
 											   headerText="End"
 											   dataField="end_when"
 											   labelFunction="dm.endDateFormatter"/>
-							<mx:DataGridColumn id="selectedBugColumnSeverity"
+							<mx:DataGridColumn id="bugDetailsColumnSeverity"
 											   headerText="Severity"
 											   dataField="bug_severity"/>
-							<mx:DataGridColumn id="selectedBugColumnPriority"
-											   headerText="Priority"
-											   dataField="bug_priority"/>
-							<mx:DataGridColumn id="selectedBugColumnStatus"
+							<mx:DataGridColumn id="bugDetailsColumnAssignedTo"
+											   headerText="Assigned to"
+											   dataField="assigned_to_name"/>
+							<mx:DataGridColumn id="bugDetailsColumnStatus"
 											   headerText="Status"
 											   dataField="bug_status"/>
-							<mx:DataGridColumn id="selectedBugColumnResolution"
+							<mx:DataGridColumn id="bugDetailsColumnResolution"
 											   headerText="Resolution"
 											   dataField="bug_resolution"/>
-							<mx:DataGridColumn id="selectedBugColumnDesc"
+							<mx:DataGridColumn id="bugDetailsColumnDesc"
 											   headerText="Description"
-											   dataField="bug_desc"
-											   itemRenderer="selectableText"/>
+											   dataField="bug_desc">
+								<mx:itemRenderer>
+									<mx:Component>
+										<mx:Text selectable="true"
+												 htmlText="{data.bug_desc}"/>
+									</mx:Component>
+								</mx:itemRenderer>
+							</mx:DataGridColumn>
 						</mx:columns>
 					</mx:DataGrid>
 					<mx:Label id="bugLongDescLabel"
+							  visible="false"
 							  text="Long description:"/>
 					<mx:Label id="bugActivityLabel"
+							  visible="false"
 							  text="Bug activities:"/>
 				</mx:VBox>
 			</mx:TabNavigator>
@@ -1549,14 +1558,14 @@
 				{
 					var params:Object={};
 					params["q"]="bug_id:" + selectedBug.bug_id;
-					params["rows"]=10;
+					params["rows"]=30;
 					mltSolr.send(params);
 					moreBugsLabel.htmlText="More bugs like bug " + selectedBug.bug_id + ": " + selectedBug.bug_desc;
 					overviewBugToReleaseBtn.visible=false;
 					searchedBugToReleaseBtn.visible=false;
 					similarBugToReleaseBtn.visible=false;
 					bugTabs.selectedIndex=2;
-				}
+				} 
 			}
 
 			public function httpResult(resultEvent:ResultEvent):void
@@ -1683,7 +1692,7 @@
 				searchColumnStartWhen.width=90;
 				searchColumnEndWhen.width=90;
 				searchColumnSeverity.width=90;
-				searchColumnPriority.width=60;
+				searchColumnAssignedTo.width=120;
 				searchColumnStatus.width=90;
 				searchColumnResolution.width=90;
 			}
@@ -1694,9 +1703,20 @@
 				mltColumnStartWhen.width=90;
 				mltColumnEndWhen.width=90;
 				mltColumnSeverity.width=90;
-				mltColumnPriority.width=60;
+				mltColumnAssignedTo.width=120;
 				mltColumnStatus.width=90;
 				mltColumnResolution.width=90;
+			}
+
+			public function setBugDetailsColumnWidth():void
+			{
+				bugDetailsColumnID.width=60;
+				bugDetailsColumnStartWhen.width=90;
+				bugDetailsColumnEndWhen.width=90;
+				bugDetailsColumnSeverity.width=90;
+				bugDetailsColumnAssignedTo.width=120;
+				bugDetailsColumnStatus.width=90;
+				bugDetailsColumnResolution.width=90;
 			}
 
 			public function showAdvancedSearch():void
@@ -1763,6 +1783,17 @@
 			public function developerIdToName(bug:Object, column:DataGridColumn):String
 			{
 				return dm.developers[bug["assigned_to"]];
+			}
+
+			private function onBugDetailsTabClicked():void
+			{	
+				setBugDetailsColumnWidth();
+				if (!bugDetails.visible)
+					bugDetails.visible=true;
+				if (!bugLongDescLabel.visible)
+					bugLongDescLabel.visible=true;
+				if (!bugActivityLabel.visible)
+					bugActivityLabel.visible=true;
 			}
 		]]>
 	</mx:Script>
