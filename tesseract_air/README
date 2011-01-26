@@ -19,7 +19,6 @@ Updates - 10/23/2010:
 4. Added release information for selected bugs. Single click a bug in the bug list, then a "jump to release" button shows in the right of the panel. Click the button to jump the corresponding releases and highlight related files and developers. 
 
 Notes: Jumping to corresponding release on click caused some confusion. For example, if I double click the bug to find similar bugs, the date range will change to the corresponding releases even I don't mean to do that. It also slows down the application a lot. I added a button on click so users can choose to jump to the releases or not. 
-Copyright 2011 Larry Maccherone, Anita Sarma, Jianguo Wang and other contributors 
 
 Updates - 10/18/2010:
 1. Tesseract is now a client-server application. The Tomcat Solr sever has been set up on the CSE server(under my own accout). I will keep the server active most of time. 
