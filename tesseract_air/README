@@ -1,0 +1,56 @@
+Copyright 2011 Larry Maccherone, Anita Sarma, Jianguo Wang and other contributors 
+
+Tesseract is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+Tesseract is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with Tesseract. If not, see http://www.gnu.org/licenses/.
+
+About Tesseract:
+
+Tesseract is an interactive, visual project exploration environment that focuses on socio-technical dependencies in software projects. It analyzes information from code archives, communication records, and bug repositories to capture the relations between code, developers, software bugs, and communication records. Key features of Tesseract include: (1) cross-linked panes that allow interactive exploration of technical relationships among files, socio-technical relations between files and developers, and social networks among developers; (2) highlighting of related files, de-velopers and bugs; and (3) visualization of socio-technical con-gruence, i.e., the match between developers who are supposed to communicate because of underlying technical dependencies and developers who are actually communicating.
+
+Change logs:
+
+Updates - 10/23/2010:
+1. Added keyword highlighting for search
+2. Fixed the html tag display in the text of the label in similar bugs panel
+3. Updated xml data for "resolution" field in bug list
+4. Added release information for selected bugs. Single click a bug in the bug list, then a "jump to release" button shows in the right of the panel. Click the button to jump the corresponding releases and highlight related files and developers. 
+
+Notes: Jumping to corresponding release on click caused some confusion. For example, if I double click the bug to find similar bugs, the date range will change to the corresponding releases even I don't mean to do that. It also slows down the application a lot. I added a button on click so users can choose to jump to the releases or not. 
+Copyright 2011 Larry Maccherone, Anita Sarma, Jianguo Wang and other contributors 
+
+Updates - 10/18/2010:
+1. Tesseract is now a client-server application. The Tomcat Solr sever has been set up on the CSE server(under my own accout). I will keep the server active most of time. 
+2. Integrated Solr client into Tesseract. The bug search is located at Issues panel.
+3. File search and developer search have been moved to File panel and Developer panel respectively. 
+4. The bug description column in the bug list is now selectable. 
+5. Data range and highlighting have been synchronized across all panels. 
+6. Fixed some display bugs. 
+
+Notes:
+1. Bug search provides keyword search, semantic search(not complete), and similar bug search. Double click on the row in the bug list to search for similar bugs. Single click on the row to highlight the related files and developers. 
+2. The release slider still has not been completed yet. 
+3. Click on the Advanced button for more options. 
+4. Found some error info in the Resolution column. Some IDs and email address appear in the column but not in the corresponding database table. 
+
+Updates - 7/8/2010:
+1. Fixed the bugs in search engine. Now the search engine works for file names, developer names and bug IDs. 
+2. Removed "epittance", "gtk-addons", and "nautilus-cd-burner" from the project list. The xml data for these 3 packages are not complete since the start date and end date of them are missing. 
+3. The bug-file highlighting bug still exists but the cause have been found. The bugIDToF matrix is calculated from xml data "bugCommit#.xml" while the bugs list is calculated from xml data "bugs#.xml". However, the "bugCommit#.xml" and "bugs#.xml" don't share the same bug IDs. Most of the time, when you click on a bug in bugs list, the corresponding bug can't been found in the bugIDToF matrix. You may check it from the two xml files in the zip file. Yet we do have some file highlighting when a bug clicked in the "metacity" project since the corresponding "bugCommit#.xml" and "bugs#.xml" share some bug IDs. 
+
+System requirements: Windows, Linux, Mac OS(not tested); Adobe Air 1 or later. 
+
+To install: Open the .air file in the zip package to run the installer. Ignore the security warnings(Trust me, no virus) and follow the steps to install the application. After the installation is finished, you may find an application named mpv shows in applications list. 
+ 
+To uninstall: Run the same installer(.air file), choose the option to uninstall the application. Then delete the installer. No garbage files will be left behind.
+
+Notes: 
+1. The application has been tested on Windows and Linux systems, but not on Mac OS. The appearance(colors and fonts) generated on Linux machines is a little bit different from Windows machines. Please let me know if it appears weird on Mac.
+2. To prevent unlinked nodes from running too far away from each other, I set a max length between each pair of nodes(including the unlinked nodes) in the SpringGraph source code. The nodes will stop moving when the max distance between the nodes reaches the max length. The current max length is 150 pixels. It may appears a little bit too far or too close between nodes(depends on the resolution of your laptop display).  Let me know if you are not comfortable with it and want to resize it. 
+3. If you find a D-D graph without corresponding F-F graph, it is because the D-D graph will includes those developers that communicate with each other(coordinateBehavior) even they didn't modify any file(empty coordinateRequirement). 
+4. To test P-P graph, you may want to choose project "rhythmbox". To test F-F graph, you can use "metacity".
+5. If you find there too few or many nodes in graph, please check the threshold, which may explain it.
+
+Jianguo Wang 6/26/2010

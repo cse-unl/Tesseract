@@ -825,15 +825,15 @@
 							<mx:DataGridColumn id="mltColumnID"
 											   headerText="Bug ID"
 											   dataField="bug_id"/>
-							<mx:DataGridColumn id="mltColumnStartWhen"
+							<mx:DataGridColumn id="mltColumnStartWhen" visible="false"
 											   headerText="Start"
 											   dataField="start_when"
 											   labelFunction="dm.startDateFormatter"/>
-							<mx:DataGridColumn id="mltColumnEndWhen"
+							<mx:DataGridColumn id="mltColumnEndWhen" visible="false"
 											   headerText="End"
 											   dataField="end_when"
 											   labelFunction="dm.endDateFormatter"/>
-							<mx:DataGridColumn id="mltColumnSeverity"
+							<mx:DataGridColumn id="mltColumnSeverity" visible="false"
 											   headerText="Severity"
 											   dataField="bug_severity"/>
 							<mx:DataGridColumn id="mltColumnAssignedTo"
@@ -842,7 +842,7 @@
 							<mx:DataGridColumn id="mltColumnStatus"
 											   headerText="Status"
 											   dataField="bug_status"/>
-							<mx:DataGridColumn id="mltColumnResolution"
+							<mx:DataGridColumn id="mltColumnResolution" visible="false"
 											   headerText="Resolution"
 											   dataField="bug_resolution"/>
 							<mx:DataGridColumn id="mltColumnDesc"
